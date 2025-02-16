@@ -7,14 +7,38 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 
+/**
+ * @link https://github.com/zero-to-prod/docblock-annotator
+ */
 class Annotator extends NodeVisitorAbstract
 {
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const method = 'method';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const property = 'property';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const constant = 'constant';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const class_ = 'class';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const public = 'public';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const private = 'private';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const protected = 'protected';
 
     /** @var Change[] */
@@ -188,6 +212,9 @@ class Annotator extends NodeVisitorAbstract
         return false;
     }
 
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public function enterNode(Node $node): void
     {
         if (!$this->hasMatchingMemberType($node)) {
