@@ -29,17 +29,17 @@ class DocblockAnnotator extends NodeVisitorAbstract
                     continue;
                 }
 
-                $new_code = (new Annotator($comments, $visibility, $members))->process($code);
+                $value = (new Annotator($comments, $visibility, $members))->process($code);
 
-                if ($new_code !== $code) {
-                    file_put_contents($file, $new_code);
+                if ($value !== $code) {
+                    file_put_contents($file, $value);
                     if ($success) {
-                        $success($file, $new_code);
+                        $success($file, $value);
                     }
                 }
-            } catch (Throwable $e) {
+            } catch (Throwable $Throwable) {
                 if ($failure) {
-                    $failure($e);
+                    $failure($Throwable->getMessage());
                 }
             }
         }
