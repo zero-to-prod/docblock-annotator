@@ -2,9 +2,15 @@
 
 namespace Zerotoprod\DocblockAnnotator;
 
+/**
+ * @link https://github.com/zero-to-prod/docblock-annotator
+ */
 class Change
 {
 
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public static function from(array $data): self
     {
         $self = new self;
