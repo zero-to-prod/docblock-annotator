@@ -11,9 +11,14 @@ use Throwable;
 
 class DocblockAnnotator extends NodeVisitorAbstract
 {
-    public function update(string $dir, array $comments, ?Closure $success = null, ?Closure $failure = null): void
-    {
-        $Annotator = new Annotator($comments);
+    public static function update(
+        string $dir,
+        array $comments,
+        array $visibility = [Annotator::public],
+        array $members = [Annotator::method, Annotator::property, Annotator::constant],
+        ?Closure $success = null,
+        ?Closure $failure = null
+    ): void {
         foreach (self::getFilesByExtension($dir, 'php') as $file) {
             try {
                 $code = file_get_contents($file);
@@ -21,7 +26,7 @@ class DocblockAnnotator extends NodeVisitorAbstract
                     continue;
                 }
 
-                $new_code = $Annotator->process($code);
+                $new_code = (new Annotator($comments, $visibility, $members))->process($code);
 
                 if ($new_code !== $code) {
                     file_put_contents($file, $new_code);
