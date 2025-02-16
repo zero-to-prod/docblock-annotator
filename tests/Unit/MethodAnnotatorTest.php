@@ -5,7 +5,7 @@ namespace Tests\Unit;
 use Tests\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
 
-class DocblockAnnotatorTest extends TestCase
+class MethodAnnotatorTest extends TestCase
 {
     /** @test */
     public function adds_a_comment(): void
