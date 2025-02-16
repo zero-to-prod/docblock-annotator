@@ -143,7 +143,7 @@ class Annotator extends NodeVisitorAbstract
             $this->changes[] = Change::from([
                 Change::start => $node->getStartFilePos(),
                 Change::end => $node->getStartFilePos() - 1,
-                Change::text => $text
+                Change::text => (string)$text
             ]);
         }
     }
