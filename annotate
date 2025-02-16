@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
+
+require_once __DIR__.'/vendor/autoload.php';
+
+if ($argc < 2 || !is_dir($argv[1])) {
+    die("Usage: php annotate <directory>\n");
+}
+
+DocblockAnnotator::update(
+    $argv[1],
+    ['@link https://github.com/zero-to-prod/docblock-annotator']
+);
