@@ -1,14 +1,14 @@
 {
-  "name": "zero-to-prod/:slug",
-  "description": ":description",
+  "name": "zero-to-prod/docblock-annotator",
+  "description": "An annotator for PHP docblocks.",
   "license": "MIT",
   "type": "library",
   "keywords": [
     "zero-to-prod",
-    ":slug"
+    "docblock-annotator"
   ],
   "readme": "./README.md",
-  "time": ":time",
+  "time": "2025-02-16",
   "authors": [
     {
       "name": "David Smith",
@@ -17,13 +17,13 @@
       "role": "maintainer"
     }
   ],
-  "homepage": "https://github.com/zero-to-prod/:slug",
+  "homepage": "https://github.com/zero-to-prod/docblock-annotator",
   "support": {
     "email": "dave0016@gmail.com",
-    "issues": "https://github.com/zero-to-prod/:slug/issues",
-    "source": "https://github.com/zero-to-prod/:slug",
-    "docs": "https://zero-to-prod.github.io/:slug/",
-    "security": "https://github.com/zero-to-prod/:slug/blob/main/SECURITY.md"
+    "issues": "https://github.com/zero-to-prod/docblock-annotator/issues",
+    "source": "https://github.com/zero-to-prod/docblock-annotator",
+    "docs": "https://zero-to-prod.github.io/docblock-annotator/",
+    "security": "https://github.com/zero-to-prod/docblock-annotator/blob/main/SECURITY.md"
   },
   "funding": [
     {
@@ -32,14 +32,15 @@
     }
   ],
   "require": {
-    "php": ">=7.1"
+    "php": ">=7.4",
+    "nikic/php-parser": "^5.0"
   },
   "require-dev": {
     "phpunit/phpunit": "<12.0"
   },
   "autoload": {
     "psr-4": {
-      "Zerotoprod\\:namespace\\": "src/"
+      "Zerotoprod\\DocblockAnnotator\\": "src/"
     }
   },
   "autoload-dev": {
@@ -48,6 +49,6 @@
     }
   },
   "bin": [
-    "bin/:slug"
+    "bin/docblock-annotator"
   ]
 }
