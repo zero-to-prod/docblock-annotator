@@ -7,6 +7,9 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 
+/**
+ * @link https://github.com/zero-to-prod/docblock-annotator
+ */
 class Annotator extends NodeVisitorAbstract
 {
     /**
@@ -21,6 +24,10 @@ class Annotator extends NodeVisitorAbstract
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const constant = 'constant';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
+    public const class_ = 'class';
     /**
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
@@ -54,15 +61,17 @@ class Annotator extends NodeVisitorAbstract
     }
 
     /**
+     * Add lines to docblocks.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public function process(string $code): string
     {
         $traverser = new NodeTraverser();
         $traverser->addVisitor($this);
-        $traverser->traverse(
-            (new ParserFactory)->createForHostVersion()->parse($code)
-        );
+
+        $parser = (new ParserFactory)->createForHostVersion();
+        $traverser->traverse($parser->parse($code));
 
         foreach (array_reverse($this->changes) as $change) {
             $code = substr_replace(
@@ -76,119 +85,128 @@ class Annotator extends NodeVisitorAbstract
         return $code;
     }
 
-    private function hasEquivalentCommentLine(string $existing_comment, string $comment): bool
+    private function hasEquivalentCommentLine(string $existing, string $new_line): bool
     {
-        $normalized = trim(str_replace(' ', '', $comment));
-        foreach (explode("\n", $existing_comment) as $line) {
-            $trimmedLine = trim(str_replace(' ', '', $line));
-            if (strpos($trimmedLine, $normalized) !== false) {
+        $normalizedNew = trim(str_replace(' ', '', $new_line));
+        foreach (explode("\n", $existing) as $line) {
+            if (strpos(trim(str_replace(' ', '', $line)), $normalizedNew) !== false) {
                 return true;
             }
         }
+
         return false;
     }
 
-    private function format(string $existing_doc, array $new_comments): string
+    private function formatDoc(string $existing, array $comments, bool $indent): string
     {
-        if (strpos($existing_doc, "\n") === false) {
-            $existing_content = trim(substr($existing_doc, 3, -2));
-            $doc = "/**\n";
-            $doc .= "     * ".$existing_content;
+        $asterisk = $indent ? '     * ' : ' * ';
+        $closing = $indent ? '     */' : ' */';
 
-            foreach ($new_comments as $comment) {
-                $doc .= "\n     * ".$comment;
+        if (strpos($existing, "\n") === false) {
+            $content = trim(substr($existing, 3, -2));
+            $doc = "/**\n$asterisk$content";
+
+            foreach ($comments as $comment) {
+                $doc .= "\n$asterisk$comment";
             }
 
-            $doc .= "\n     */";
-
-            return $doc;
+            return $doc."\n$closing";
         }
 
-        $doc = rtrim($existing_doc, " */\n");
-        foreach ($new_comments as $comment) {
-            $doc .= "\n     * ".$comment;
+        $doc = rtrim($existing, " */\n");
+        foreach ($comments as $comment) {
+            $doc .= "\n$asterisk$comment";
         }
-        $doc .= "\n     */";
 
-        return $doc;
+        return $doc."\n$closing";
     }
 
-    private function processComment(Node $node): void
+    private function processComment(Node $Node, bool $indent = true): void
     {
-        $doc_comment = $node->getDocComment();
-        if ($doc_comment) {
-            $existing_doc = $doc_comment->getText();
-            $new_comments = [];
+        $comment = $Node->getDocComment();
 
-            foreach ($this->comments as $comment) {
-                if (!$this->hasEquivalentCommentLine($existing_doc, $comment)) {
-                    $new_comments[] = $comment;
+        if ($comment) {
+            $existing = $comment->getText();
+            $new_lines = [];
+
+            foreach ($this->comments as $line) {
+                if (!$this->hasEquivalentCommentLine($existing, $line)) {
+                    $new_lines[] = $line;
                 }
             }
 
-            if (!empty($new_comments)) {
-                $new_doc = $this->format($existing_doc, $new_comments);
+            if ($new_lines) {
+                $updated = $this->formatDoc($existing, $new_lines, $indent);
                 $this->changes[] = Change::from([
-                    Change::start => $doc_comment->getStartFilePos(),
-                    Change::end => $doc_comment->getEndFilePos(),
-                    Change::text => $new_doc
+                    Change::start => $comment->getStartFilePos(),
+                    Change::end => $comment->getEndFilePos(),
+                    Change::text => $updated
                 ]);
             }
         } else {
+            $asterisk = $indent ? '     * ' : ' * ';
+            $closing = $indent ? '     */' : ' */';
+            $padding = $indent ? "\n    " : "\n";
+
             $text = "/**\n";
-            foreach ($this->comments as $comment) {
-                $text .= "     * $comment\n";
+            foreach ($this->comments as $line) {
+                $text .= "$asterisk$line\n";
             }
-            $text .= "     */\n    ";
+            $text .= "$closing$padding";
+
             $this->changes[] = Change::from([
-                Change::start => $node->getStartFilePos(),
-                Change::end => $node->getStartFilePos() - 1,
-                Change::text => (string)$text
+                Change::start => $Node->getStartFilePos(),
+                Change::end => $Node->getStartFilePos() - 1,
+                Change::text => $text
             ]);
         }
     }
 
-    private function hasMatchingVisibility(Node $node): bool
+    private function hasMatchingVisibility(Node $Node): bool
     {
-        if ($node instanceof Node\Stmt\ClassMethod) {
-            return (
-                (in_array(self::public, $this->visibility, true) && $node->isPublic())
-                || (in_array(self::protected, $this->visibility, true) && $node->isProtected())
-                || (in_array(self::private, $this->visibility, true) && $node->isPrivate())
-            );
+        if ($Node instanceof Node\Stmt\Class_) {
+            return true;
         }
 
-        if ($node instanceof Node\Stmt\Property) {
-            return (
-                (in_array(self::public, $this->visibility, true) && $node->isPublic())
-                || (in_array(self::protected, $this->visibility, true) && $node->isProtected())
-                || (in_array(self::private, $this->visibility, true) && $node->isPrivate())
-            );
-        }
+        $isPublic = in_array(self::public, $this->visibility, true);
+        $isProtected = in_array(self::protected, $this->visibility, true);
+        $isPrivate = in_array(self::private, $this->visibility, true);
 
-        if ($node instanceof Node\Stmt\ClassConst) {
-            return (
-                (in_array(self::public, $this->visibility, true) && $node->isPublic())
-                || (in_array(self::protected, $this->visibility, true) && $node->isProtected())
-                || (in_array(self::private, $this->visibility, true) && $node->isPrivate())
-            );
-        }
-
-        return false;
+        return (
+            ($Node instanceof Node\Stmt\ClassMethod
+                && (
+                    ($isPublic && $Node->isPublic())
+                    || ($isProtected && $Node->isProtected())
+                    || ($isPrivate && $Node->isPrivate())
+                ))
+            || ($Node instanceof Node\Stmt\Property
+                && (
+                    ($isPublic && $Node->isPublic())
+                    || ($isProtected && $Node->isProtected())
+                    || ($isPrivate && $Node->isPrivate())
+                ))
+            || ($Node instanceof Node\Stmt\ClassConst
+                && (
+                    ($isPublic && $Node->isPublic())
+                    || ($isProtected && $Node->isProtected())
+                    || ($isPrivate && $Node->isPrivate())
+                ))
+        );
     }
 
-    private function hasMatchingMemberType(Node $node): bool
+    private function hasMatchingMemberType(Node $Node): bool
     {
-        if ($node instanceof Node\Stmt\ClassMethod) {
+        if ($Node instanceof Node\Stmt\ClassMethod) {
             return in_array(self::method, $this->members, true);
         }
-
-        if ($node instanceof Node\Stmt\Property) {
+        if ($Node instanceof Node\Stmt\Property) {
             return in_array(self::property, $this->members, true);
         }
-
-        if ($node instanceof Node\Stmt\ClassConst) {
+        if ($Node instanceof Node\Stmt\ClassConst) {
             return in_array(self::constant, $this->members, true);
+        }
+        if ($Node instanceof Node\Stmt\Class_) {
+            return in_array(self::class_, $this->members, true);
         }
 
         return false;
@@ -199,13 +217,18 @@ class Annotator extends NodeVisitorAbstract
      */
     public function enterNode(Node $node): void
     {
-        if (($node instanceof Node\Stmt\ClassMethod
-                || $node instanceof Node\Stmt\Property
-                || $node instanceof Node\Stmt\ClassConst)
-            && $this->hasMatchingVisibility($node)
-            && $this->hasMatchingMemberType($node)
-        ) {
-            $this->processComment($node);
+        if (!$this->hasMatchingMemberType($node)) {
+            return;
+        }
+
+        if ($node instanceof Node\Stmt\Class_) {
+            $this->processComment($node, false);
+
+            return;
+        }
+
+        if ($this->hasMatchingVisibility($node)) {
+            $this->processComment($node, true);
         }
     }
 }
