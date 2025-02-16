@@ -53,6 +53,7 @@ DocblockAnnotator::update(
     [Annotator::method, Annotator::property, Annotator::constant],
     fn(string $file, string $value) => echo $value,
     fn(Throwable $Throwable) => echo $Throwable->getMessage(),
+    true // recursive
 );
 ```
 
