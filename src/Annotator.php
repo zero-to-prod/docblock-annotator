@@ -9,11 +9,29 @@ use PhpParser\ParserFactory;
 
 class Annotator extends NodeVisitorAbstract
 {
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const method = 'method';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const property = 'property';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const constant = 'constant';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const public = 'public';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const private = 'private';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const protected = 'protected';
 
     /** @var Change[] */
@@ -22,6 +40,9 @@ class Annotator extends NodeVisitorAbstract
     private array $visibility;
     private array $members;
 
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public function __construct(
         array $comments,
         array $visibility = [self::public],
@@ -32,6 +53,9 @@ class Annotator extends NodeVisitorAbstract
         $this->members = array_map('strtolower', $members);
     }
 
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public function process(string $code): string
     {
         $traverser = new NodeTraverser();
@@ -170,6 +194,9 @@ class Annotator extends NodeVisitorAbstract
         return false;
     }
 
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public function enterNode(Node $node): void
     {
         if (($node instanceof Node\Stmt\ClassMethod
