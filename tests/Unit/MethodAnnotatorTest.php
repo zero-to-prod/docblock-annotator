@@ -115,6 +115,43 @@ class MethodAnnotatorTest extends TestCase
     }
 
     /** @test */
+    public function ignores_duplicate_comments(): void
+    {
+        $file = <<<PHP
+        <?php
+        class User
+        {
+            /**
+             * @link https://github.com/zero-to-prod/arr
+             */
+            public function method(): string
+            {
+                return '';
+            }
+        }
+        PHP;
+
+        $code = (new Annotator(['@link https://github.com/zero-to-prod/arr']))->process($file);
+
+        self::assertEquals(
+            <<<PHP
+            <?php
+            class User
+            {
+                /**
+                 * @link https://github.com/zero-to-prod/arr
+                 */
+                public function method(): string
+                {
+                    return '';
+                }
+            }
+            PHP,
+            $code
+        );
+    }
+
+    /** @test */
     public function updates_inline_comments(): void
     {
         $file = <<<PHP
