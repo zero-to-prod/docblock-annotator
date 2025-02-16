@@ -11,6 +11,9 @@ use Throwable;
 
 class DocblockAnnotator extends NodeVisitorAbstract
 {
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public static function update(
         string $dir,
         array $comments,
