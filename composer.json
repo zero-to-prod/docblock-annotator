@@ -1,6 +1,6 @@
 {
   "name": "zero-to-prod/docblock-annotator",
-  "description": "An annotator for PHP dockblocks.",
+  "description": "An annotator for PHP docblocks.",
   "license": "MIT",
   "type": "library",
   "keywords": [
