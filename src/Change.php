@@ -2,11 +2,20 @@
 
 namespace Zerotoprod\DocblockAnnotator;
 
-use Zerotoprod\DataModel\DataModel;
-
 class Change
 {
-    use DataModel;
+
+    public static function from(array $data): self
+    {
+        $self = new self;
+        foreach ($data as $key => $value) {
+            if (property_exists(self::class, $key)) {
+                $self->$key = $value;
+            }
+        }
+
+        return $self;
+    }
 
     /**
      * @link https://github.com/zero-to-prod/docblock-annotator
