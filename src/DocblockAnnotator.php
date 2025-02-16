@@ -15,14 +15,14 @@ class DocblockAnnotator extends NodeVisitorAbstract
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public static function update(
-        string $dir,
+        string $directory,
         array $comments,
         array $visibility = [Annotator::public],
         array $members = [Annotator::method, Annotator::property, Annotator::constant],
         ?Closure $success = null,
         ?Closure $failure = null
     ): void {
-        foreach (self::getFilesByExtension($dir, 'php') as $file) {
+        foreach (self::getFilesByExtension($directory, 'php') as $file) {
             try {
                 $code = file_get_contents($file);
                 if ($code === false) {
