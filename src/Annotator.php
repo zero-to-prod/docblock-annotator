@@ -78,13 +78,13 @@ class Annotator extends NodeVisitorAbstract
 
     private function hasEquivalentCommentLine(string $existing_comment, string $comment): bool
     {
-        $normalized = str_replace(' ', '', $comment);
+        $normalized = trim(str_replace(' ', '', $comment));
         foreach (explode("\n", $existing_comment) as $line) {
-            if (strpos($line, $normalized) !== false) {
+            $trimmedLine = trim(str_replace(' ', '', $line));
+            if (strpos($trimmedLine, $normalized) !== false) {
                 return true;
             }
         }
-
         return false;
     }
 
