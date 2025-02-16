@@ -23,11 +23,11 @@
 
 ## Introduction
 
-An annotator for PHP dockblocks.
+An annotator for PHP docblocks.
 
 ## Requirements
 
-- PHP 7.1 or higher.
+- PHP 7.4 or higher.
 
 ## Installation
 
@@ -41,7 +41,20 @@ This will add the package to your project’s dependencies and create an autoloa
 
 ## Usage
 
+Add comments to class members.
 
+```php
+use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
+
+DocblockAnnotator::update(
+    'src',
+    ['@link https://github.com/zero-to-prod/docblock-annotator'],
+    [Annotator::public, Annotator::private, Annotator::protected],
+    [Annotator::method, Annotator::property, Annotator::constant],
+    fn(string $file, string $value) => echo $value,
+    fn(Throwable $Throwable) => echo $Throwable->getMessage(),
+);
+```
 
 ## Contributing
 
