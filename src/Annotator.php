@@ -7,17 +7,47 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\ParserFactory;
 
+/**
+ * @link https://github.com/zero-to-prod/docblock-annotator
+ */
 class Annotator extends NodeVisitorAbstract
 {
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const method = 'method';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const property = 'property';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const constant = 'constant';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const class_ = 'class';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const enum = 'enum';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const enum_case = 'enum_case';
 
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const public = 'public';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const private = 'private';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const protected = 'protected';
 
     /** @var Change[] */
