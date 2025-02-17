@@ -80,7 +80,7 @@ class Annotator extends NodeVisitorAbstract
         return false;
     }
 
-    private function formatDoc(string $existing, array $comments, bool $indent): string
+    private function format(string $existing, array $comments, bool $indent): string
     {
         $asterisk = $indent ? '     * ' : ' * ';
         $closing = $indent ? '     */' : ' */';
@@ -104,7 +104,7 @@ class Annotator extends NodeVisitorAbstract
         return $doc."\n$closing";
     }
 
-    private function processComment(Node $Node, bool $indent = true): void
+    private function renderComment(Node $Node, bool $indent = true): void
     {
         $comment = $Node->getDocComment();
 
@@ -119,7 +119,7 @@ class Annotator extends NodeVisitorAbstract
             }
 
             if ($new_lines) {
-                $updated = $this->formatDoc($existing, $new_lines, $indent);
+                $updated = $this->format($existing, $new_lines, $indent);
                 $this->changes[] = Change::from([
                     Change::start => $comment->getStartFilePos(),
                     Change::end => $comment->getEndFilePos(),
@@ -217,13 +217,13 @@ class Annotator extends NodeVisitorAbstract
         }
 
         if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Enum_) {
-            $this->processComment($node, false);
+            $this->renderComment($node, false);
 
             return;
         }
 
         if ($this->hasMatchingVisibility($node)) {
-            $this->processComment($node);
+            $this->renderComment($node);
         }
     }
 }
