@@ -7,6 +7,9 @@ use PhpParser\NodeVisitorAbstract;
 use Throwable;
 use Zerotoprod\Filesystem\Filesystem;
 
+/**
+ * @link https://github.com/zero-to-prod/docblock-annotator
+ */
 class DocblockAnnotator extends NodeVisitorAbstract
 {
     /**

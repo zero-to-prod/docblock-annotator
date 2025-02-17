@@ -31,6 +31,15 @@ class Annotator extends NodeVisitorAbstract
     /**
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
+    public const enum = 'enum';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
+    public const enum_case = 'enum_case';
+
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
     public const public = 'public';
     /**
      * @link https://github.com/zero-to-prod/docblock-annotator
@@ -48,6 +57,10 @@ class Annotator extends NodeVisitorAbstract
     private array $members;
 
     /**
+     * @param  array  $comments    Lines you want added to the docblock.
+     * @param  array  $visibility  The visibility levels you want to target (public, private, protected).
+     * @param  array  $members     The member types you want to target (method, property, constant, class, enum, enum_case).
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public function __construct(
@@ -89,7 +102,7 @@ class Annotator extends NodeVisitorAbstract
     {
         $normalizedNew = trim(str_replace(' ', '', $new_line));
         foreach (explode("\n", $existing) as $line) {
-            if (strpos(trim(str_replace(' ', '', $line)), $normalizedNew) !== false) {
+            if (str_contains(trim(str_replace(' ', '', $line)), $normalizedNew)) {
                 return true;
             }
         }
@@ -97,12 +110,12 @@ class Annotator extends NodeVisitorAbstract
         return false;
     }
 
-    private function formatDoc(string $existing, array $comments, bool $indent): string
+    private function format(string $existing, array $comments, bool $indent): string
     {
         $asterisk = $indent ? '     * ' : ' * ';
         $closing = $indent ? '     */' : ' */';
 
-        if (strpos($existing, "\n") === false) {
+        if (!str_contains($existing, "\n")) {
             $content = trim(substr($existing, 3, -2));
             $doc = "/**\n$asterisk$content";
 
@@ -121,7 +134,7 @@ class Annotator extends NodeVisitorAbstract
         return $doc."\n$closing";
     }
 
-    private function processComment(Node $Node, bool $indent = true): void
+    private function renderComment(Node $Node, bool $indent = true): void
     {
         $comment = $Node->getDocComment();
 
@@ -136,7 +149,7 @@ class Annotator extends NodeVisitorAbstract
             }
 
             if ($new_lines) {
-                $updated = $this->formatDoc($existing, $new_lines, $indent);
+                $updated = $this->format($existing, $new_lines, $indent);
                 $this->changes[] = Change::from([
                     Change::start => $comment->getStartFilePos(),
                     Change::end => $comment->getEndFilePos(),
@@ -164,8 +177,12 @@ class Annotator extends NodeVisitorAbstract
 
     private function hasMatchingVisibility(Node $Node): bool
     {
-        if ($Node instanceof Node\Stmt\Class_) {
+        if ($Node instanceof Node\Stmt\Class_ || $Node instanceof Node\Stmt\Enum_) {
             return true;
+        }
+
+        if ($Node instanceof Node\Stmt\EnumCase) {
+            return in_array(self::public, $this->visibility, true);
         }
 
         $isPublic = in_array(self::public, $this->visibility, true);
@@ -209,6 +226,14 @@ class Annotator extends NodeVisitorAbstract
             return in_array(self::class_, $this->members, true);
         }
 
+        if ($Node instanceof Node\Stmt\Enum_) {
+            return in_array(self::enum, $this->members, true);
+        }
+
+        if ($Node instanceof Node\Stmt\EnumCase) {
+            return in_array(self::enum_case, $this->members, true);
+        }
+
         return false;
     }
 
@@ -221,14 +246,14 @@ class Annotator extends NodeVisitorAbstract
             return;
         }
 
-        if ($node instanceof Node\Stmt\Class_) {
-            $this->processComment($node, false);
+        if ($node instanceof Node\Stmt\Class_ || $node instanceof Node\Stmt\Enum_) {
+            $this->renderComment($node, false);
 
             return;
         }
 
         if ($this->hasMatchingVisibility($node)) {
-            $this->processComment($node, true);
+            $this->renderComment($node);
         }
     }
 }
