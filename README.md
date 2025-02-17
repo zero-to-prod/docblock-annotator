@@ -45,12 +45,13 @@ Add comments to class members.
 
 ```php
 use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
+use Zerotoprod\DocblockAnnotator\Annotator;
 
 DocblockAnnotator::update(
     'src',
     ['@link https://github.com/zero-to-prod/docblock-annotator'],
     [Annotator::public, Annotator::private, Annotator::protected],
-    [Annotator::method, Annotator::property, Annotator::constant],
+    [Annotator::method, Annotator::property, Annotator::constant, Annotator::enum, Annotator::enum_case],
     fn(string $file, string $value) => echo $value,
     fn(Throwable $Throwable) => echo $Throwable->getMessage(),
     true // recursive
