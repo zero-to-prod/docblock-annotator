@@ -47,7 +47,7 @@ Add comments to class members.
 use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
 use Zerotoprod\DocblockAnnotator\Annotator;
 
-DocblockAnnotator::update(
+DocblockAnnotator::updateDirectory(
     'src',
     ['@link https://github.com/zero-to-prod/docblock-annotator'],
     [Annotator::public, Annotator::private, Annotator::protected],
