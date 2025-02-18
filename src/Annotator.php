@@ -3,7 +3,10 @@
 namespace Zerotoprod\DocblockAnnotator;
 
 use PhpParser\Node;
+use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
+use PhpParser\ParserFactory;
+use Zerotoprod\DocgenVisitor\DocgenVisitor;
 
 /**
  * @link https://github.com/zero-to-prod/docblock-annotator
@@ -26,6 +29,10 @@ class Annotator extends NodeVisitorAbstract
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const class_ = 'class';
+    /**
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
+    public const interface_ = 'interface';
     /**
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
@@ -75,65 +82,52 @@ class Annotator extends NodeVisitorAbstract
     }
 
     /**
-     * Add lines to docblocks using DocblockTraverser.
-     *
-     * We now handle duplicate filtering here:
-     *   - We read the existing docblock from the node (if any),
-     *   - We filter out lines that already exist,
-     *   - Then we pass the (potentially reduced) lines to DocblockTraverser.
-     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public function process(string $code): string
     {
-        return (new DocblockTraverser())->update($code, function (Node $Node): array {
-            if (!$this->hasMatchingMemberType($Node)) {
+        $changes = [];
+        $NodeTraverser = new NodeTraverser();
+
+        $NodeTraverser->addVisitor(new DocgenVisitor(function (Node $Node) {
+            if (!$this->isMatchingNode($Node)) {
                 return [];
             }
 
-            if ($Node instanceof Node\Stmt\Class_ || $Node instanceof Node\Stmt\Enum_) {
-                $docblock = $Node->getDocComment() ? $Node->getDocComment()->getText() : '';
+            $docblock = $Node->getDocComment() ? $Node->getDocComment()->getText() : '';
 
-                return self::filterDuplicates($docblock, $this->comments);
-            }
-
-            if ($this->hasMatchingVisibility($Node)) {
-                $docblock = $Node->getDocComment() ? $Node->getDocComment()->getText() : '';
-
+            if ($Node instanceof Node\Stmt\Class_
+                || $Node instanceof Node\Stmt\Enum_
+                || $Node instanceof Node\Stmt\Interface_
+                || $this->hasMatchingVisibility($Node)
+            ) {
                 return self::filterDuplicates($docblock, $this->comments);
             }
 
             return [];
-        });
+        }, $changes));
+
+        $NodeTraverser->traverse((new ParserFactory)->createForHostVersion()->parse($code));
+
+        foreach (array_reverse($changes) as $change) {
+            $code = substr_replace($code, $change->text, $change->start, $change->end - $change->start + 1);
+        }
+
+        return $code;
     }
 
-    private function hasMatchingMemberType(Node $Node): bool
+    private function isMatchingNode(Node $Node): bool
     {
-        if ($Node instanceof Node\Stmt\ClassMethod) {
-            return in_array(self::method, $this->members, true);
-        }
-
-        if ($Node instanceof Node\Stmt\Property) {
-            return in_array(self::property, $this->members, true);
-        }
-
-        if ($Node instanceof Node\Stmt\ClassConst) {
-            return in_array(self::constant, $this->members, true);
-        }
-
-        if ($Node instanceof Node\Stmt\Class_) {
-            return in_array(self::class_, $this->members, true);
-        }
-
-        if ($Node instanceof Node\Stmt\Enum_) {
-            return in_array(self::enum, $this->members, true);
-        }
-
-        if ($Node instanceof Node\Stmt\EnumCase) {
-            return in_array(self::enum_case, $this->members, true);
-        }
-
-        return false;
+        return match (true) {
+            $Node instanceof Node\Stmt\ClassMethod => in_array(self::method, $this->members, true),
+            $Node instanceof Node\Stmt\Property => in_array(self::property, $this->members, true),
+            $Node instanceof Node\Stmt\ClassConst => in_array(self::constant, $this->members, true),
+            $Node instanceof Node\Stmt\Class_ => in_array(self::class_, $this->members, true),
+            $Node instanceof Node\Stmt\Enum_ => in_array(self::enum, $this->members, true),
+            $Node instanceof Node\Stmt\EnumCase => in_array(self::enum_case, $this->members, true),
+            $Node instanceof Node\Stmt\Interface_ => in_array(self::interface_, $this->members, true),
+            default => false
+        };
     }
 
     private function hasMatchingVisibility(Node $Node): bool
@@ -142,55 +136,30 @@ class Annotator extends NodeVisitorAbstract
             return in_array(self::public, $this->visibility, true);
         }
 
-        $isPublic = in_array(self::public, $this->visibility, true);
-        $isProtected = in_array(self::protected, $this->visibility, true);
-        $isPrivate = in_array(self::private, $this->visibility, true);
+        $map = [
+            self::public => 'isPublic',
+            self::protected => 'isProtected',
+            self::private => 'isPrivate',
+        ];
 
-        return (
-            ($Node instanceof Node\Stmt\ClassMethod
-                && (
-                    ($isPublic && $Node->isPublic())
-                    || ($isProtected && $Node->isProtected())
-                    || ($isPrivate && $Node->isPrivate())
-                )
-            )
-            || ($Node instanceof Node\Stmt\Property
-                && (
-                    ($isPublic && $Node->isPublic())
-                    || ($isProtected && $Node->isProtected())
-                    || ($isPrivate && $Node->isPrivate())
-                )
-            )
-            || ($Node instanceof Node\Stmt\ClassConst
-                && (
-                    ($isPublic && $Node->isPublic())
-                    || ($isProtected && $Node->isProtected())
-                    || ($isPrivate && $Node->isPrivate())
-                )
-            )
-        );
-    }
-
-    private static function filterDuplicates(string $docblock, array $comments): array
-    {
-        $lines = [];
-        foreach ($comments as $line) {
-            if (!self::commentContains($docblock, trim(str_replace(' ', '', $line)))) {
-                $lines[] = $line;
-            }
-        }
-
-        return $lines;
-    }
-
-    private static function commentContains(string $docblock, string $needle): bool
-    {
-        foreach (explode("\n", $docblock) as $line) {
-            if (str_contains(trim(str_replace(' ', '', $line)), $needle)) {
+        foreach ($map as $visibility => $methodName) {
+            if (in_array($visibility, $this->visibility, true) && $Node->$methodName()) {
                 return true;
             }
         }
 
         return false;
+    }
+
+    private static function filterDuplicates(string $docblock, array $comments): array
+    {
+        return array_filter($comments, static function ($line) use ($docblock) {
+            return !self::commentContains($docblock, preg_replace('/\s+/', '', $line));
+        });
+    }
+
+    private static function commentContains(string $docblock, string $needle): bool
+    {
+        return str_contains(preg_replace('/\s+/', '', $docblock), $needle);
     }
 }
