@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\DocblockAnnotator;
 
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
@@ -8,7 +8,7 @@ use Tests\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
 use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
 
-class DocblockAnnotatorUpdateTest extends TestCase
+class UpdateDirectoryTest extends TestCase
 {
     private vfsStreamDirectory $root;
 
@@ -29,7 +29,7 @@ class DocblockAnnotatorUpdateTest extends TestCase
         $filePath = vfsStream::url('root/Foo.php');
         file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::update($this->root->url(), ['comment'], [Annotator::public], [Annotator::class_]);
+        DocblockAnnotator::updateDirectory($this->root->url(), ['comment'], [Annotator::public], [Annotator::class_]);
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -56,7 +56,7 @@ class DocblockAnnotatorUpdateTest extends TestCase
         $filePath = vfsStream::url('root/FooInterface.php');
         file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::update($this->root->url(), ['interface comment'], [Annotator::public], [Annotator::interface_]);
+        DocblockAnnotator::updateDirectory($this->root->url(), ['interface comment'], [Annotator::public], [Annotator::interface_]);
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -86,7 +86,7 @@ class DocblockAnnotatorUpdateTest extends TestCase
         $filePath = vfsStream::url('root/Suit.php');
         file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::update($this->root->url(), ['enum comment'], [Annotator::public], [Annotator::enum]);
+        DocblockAnnotator::updateDirectory($this->root->url(), ['enum comment'], [Annotator::public], [Annotator::enum]);
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -117,7 +117,7 @@ class DocblockAnnotatorUpdateTest extends TestCase
         $filePath = vfsStream::url('root/SuitCases.php');
         file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::update($this->root->url(), ['enum case comment'], [Annotator::public], [Annotator::enum_case]);
+        DocblockAnnotator::updateDirectory($this->root->url(), ['enum case comment'], [Annotator::public], [Annotator::enum_case]);
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -150,7 +150,7 @@ class DocblockAnnotatorUpdateTest extends TestCase
         $filePath = vfsStream::url('root/ConstantsTest.php');
         file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::update($this->root->url(), ['constant comment'], [Annotator::public], [Annotator::constant]);
+        DocblockAnnotator::updateDirectory($this->root->url(), ['constant comment'], [Annotator::public], [Annotator::constant]);
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -179,7 +179,7 @@ class DocblockAnnotatorUpdateTest extends TestCase
         $filePath = vfsStream::url('root/PropertiesTest.php');
         file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::update($this->root->url(), ['property comment'], [Annotator::public], [Annotator::property]);
+        DocblockAnnotator::updateDirectory($this->root->url(), ['property comment'], [Annotator::public], [Annotator::property]);
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -210,7 +210,7 @@ class DocblockAnnotatorUpdateTest extends TestCase
         $filePath = vfsStream::url('root/MethodsTest.php');
         file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::update($this->root->url(), ['method comment'], [Annotator::public], [Annotator::method]);
+        DocblockAnnotator::updateDirectory($this->root->url(), ['method comment'], [Annotator::public], [Annotator::method]);
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
