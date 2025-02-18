@@ -1,13 +1,13 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\DocblockAnnotator;
 
 use org\bovigo\vfs\vfsStream;
 use PHPUnit\Framework\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
 use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
 
-class DocblockAnnotatorUpdateFileTest extends TestCase
+class UpdateFileTest extends TestCase
 {
 
     /** @test */
