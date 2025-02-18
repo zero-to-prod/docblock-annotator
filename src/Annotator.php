@@ -45,6 +45,13 @@ class Annotator extends NodeVisitorAbstract
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const interface_ = 'interface';
+
+    /**
+     * Indicates that the member type is a trait.
+     *
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
+    public const trait_ = 'trait';
     /**
      * Indicates that the member type is an enum.
      *
@@ -122,48 +129,54 @@ class Annotator extends NodeVisitorAbstract
      */
     public function process(string $code): string
     {
-        $changes = [];
         $NodeTraverser = new NodeTraverser();
-
+        $changes = [];
         $NodeTraverser->addVisitor(new DocgenVisitor(function (Node $Node) {
-            if (!$this->isMatchingNode($Node)) {
+            $unknown_node = !in_array(
+                match (true) {
+                    $Node instanceof Node\Stmt\ClassMethod => self::method,
+                    $Node instanceof Node\Stmt\Property => self::property,
+                    $Node instanceof Node\Stmt\ClassConst => self::constant,
+                    $Node instanceof Node\Stmt\Class_ => self::class_,
+                    $Node instanceof Node\Stmt\Enum_ => self::enum,
+                    $Node instanceof Node\Stmt\EnumCase => self::enum_case,
+                    $Node instanceof Node\Stmt\Interface_ => self::interface_,
+                    $Node instanceof Node\Stmt\Trait_ => self::trait_,
+                    default => null
+                },
+                $this->members,
+                true
+            );
+
+            if ($unknown_node) {
                 return [];
             }
 
-            $docblock = $Node->getDocComment() ? $Node->getDocComment()->getText() : '';
-
-            if ($Node instanceof Node\Stmt\Class_
-                || $Node instanceof Node\Stmt\Enum_
-                || $Node instanceof Node\Stmt\Interface_
-                || $this->hasMatchingVisibility($Node)
-            ) {
-                return self::filterDuplicates($docblock, $this->comments);
-            }
-
-            return [];
+            return $Node instanceof Node\Stmt\Class_
+            || $Node instanceof Node\Stmt\Enum_
+            || $Node instanceof Node\Stmt\Interface_
+            || $Node instanceof Node\Stmt\Trait_
+            || $this->hasMatchingVisibility($Node)
+                ? $this->dedupe(
+                    $Node->getDocComment()
+                        ? $Node->getDocComment()->getText()
+                        : ''
+                )
+                : [];
         }, $changes));
 
         $NodeTraverser->traverse((new ParserFactory)->createForHostVersion()->parse($code));
 
         foreach (array_reverse($changes) as $change) {
-            $code = substr_replace($code, $change->text, $change->start, $change->end - $change->start + 1);
+            $code = substr_replace(
+                $code,
+                $change->text,
+                $change->start,
+                $change->end - $change->start + 1
+            );
         }
 
         return $code;
-    }
-
-    private function isMatchingNode(Node $Node): bool
-    {
-        return match (true) {
-            $Node instanceof Node\Stmt\ClassMethod => in_array(self::method, $this->members, true),
-            $Node instanceof Node\Stmt\Property => in_array(self::property, $this->members, true),
-            $Node instanceof Node\Stmt\ClassConst => in_array(self::constant, $this->members, true),
-            $Node instanceof Node\Stmt\Class_ => in_array(self::class_, $this->members, true),
-            $Node instanceof Node\Stmt\Enum_ => in_array(self::enum, $this->members, true),
-            $Node instanceof Node\Stmt\EnumCase => in_array(self::enum_case, $this->members, true),
-            $Node instanceof Node\Stmt\Interface_ => in_array(self::interface_, $this->members, true),
-            default => false
-        };
     }
 
     private function hasMatchingVisibility(Node $Node): bool
@@ -172,30 +185,24 @@ class Annotator extends NodeVisitorAbstract
             return in_array(self::public, $this->visibility, true);
         }
 
-        $map = [
-            self::public => 'isPublic',
-            self::protected => 'isProtected',
-            self::private => 'isPrivate',
-        ];
+        $visibility = match (true) {
+            $Node->isPublic() => self::public,
+            $Node->isProtected() => self::protected,
+            $Node->isPrivate() => self::private,
+            default => null
+        };
 
-        foreach ($map as $visibility => $methodName) {
-            if (in_array($visibility, $this->visibility, true) && $Node->$methodName()) {
-                return true;
-            }
-        }
-
-        return false;
+        return $visibility !== null && in_array($visibility, $this->visibility, true);
     }
 
-    private static function filterDuplicates(string $docblock, array $comments): array
+    private function dedupe(string $docblock): array
     {
-        return array_filter($comments, static function ($line) use ($docblock) {
-            return !self::commentContains($docblock, preg_replace('/\s+/', '', $line));
-        });
-    }
-
-    private static function commentContains(string $docblock, string $needle): bool
-    {
-        return str_contains(preg_replace('/\s+/', '', $docblock), $needle);
+        return array_filter(
+            $this->comments,
+            static fn($line) => !str_contains(
+                preg_replace('/\s+/', '', $docblock),
+                preg_replace('/\s+/', '', $line)
+            )
+        );
     }
 }
