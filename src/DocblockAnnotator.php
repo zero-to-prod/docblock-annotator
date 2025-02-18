@@ -31,7 +31,7 @@ class DocblockAnnotator extends NodeVisitorAbstract
      * @return void
      * @throws Throwable
      */
-    public static function update(
+    public static function updateDirectory(
         string $directory,
         array $comments,
         array $visibility = [Annotator::public],
