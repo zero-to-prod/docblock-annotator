@@ -1,11 +1,11 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\Annotator;
 
 use Tests\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
 
-class ClassAnnotatorTest extends TestCase
+class ClassTest extends TestCase
 {
     /** @test */
     public function adds_a_comment_to_class(): void

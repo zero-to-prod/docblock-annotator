@@ -1,14 +1,15 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\Annotator;
 
 use Tests\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
 
-class MethodAnnotatorTest extends TestCase
+class VisibilityTest extends TestCase
 {
+
     /** @test */
-    public function adds_a_comment(): void
+    public function adds_a_comment_public_member(): void
     {
         $file = <<<PHP
         <?php
@@ -21,7 +22,7 @@ class MethodAnnotatorTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment']))->process($file);
+        $code = (new Annotator(['comment'], ['public']))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -41,8 +42,9 @@ class MethodAnnotatorTest extends TestCase
         );
     }
 
+
     /** @test */
-    public function adds_a_comments(): void
+    public function does_not_add_a_comment_public_member(): void
     {
         $file = <<<PHP
         <?php
@@ -55,17 +57,13 @@ class MethodAnnotatorTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment1', 'comment2']))->process($file);
+        $code = (new Annotator(['comment'], ['private']))->process($file);
 
         self::assertEquals(
             <<<PHP
             <?php
             class User
             {
-                /**
-                 * comment1
-                 * comment2
-                 */
                 public function method(): string
                 {
                     return '';
@@ -77,23 +75,20 @@ class MethodAnnotatorTest extends TestCase
     }
 
     /** @test */
-    public function updates_a_comments(): void
+    public function adds_a_comment_private_member(): void
     {
         $file = <<<PHP
         <?php
         class User
         {
-            /**
-             * existing
-             */
-            public function method(): string
+            private function method(): string
             {
                 return '';
             }
         }
         PHP;
 
-        $code = (new Annotator(['comment']))->process($file);
+        $code = (new Annotator(['comment'], ['private']))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -101,10 +96,9 @@ class MethodAnnotatorTest extends TestCase
             class User
             {
                 /**
-                 * existing
                  * comment
                  */
-                public function method(): string
+                private function method(): string
                 {
                     return '';
                 }
@@ -115,23 +109,20 @@ class MethodAnnotatorTest extends TestCase
     }
 
     /** @test */
-    public function ignores_duplicate_comments(): void
+    public function adds_a_comment_protected_member(): void
     {
         $file = <<<PHP
         <?php
         class User
         {
-            /**
-             * @link https://github.com/zero-to-prod/arr
-             */
-            public function method(): string
+            protected function method(): string
             {
                 return '';
             }
         }
         PHP;
 
-        $code = (new Annotator(['@link https://github.com/zero-to-prod/arr']))->process($file);
+        $code = (new Annotator(['comment'], ['protected']))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -139,45 +130,9 @@ class MethodAnnotatorTest extends TestCase
             class User
             {
                 /**
-                 * @link https://github.com/zero-to-prod/arr
-                 */
-                public function method(): string
-                {
-                    return '';
-                }
-            }
-            PHP,
-            $code
-        );
-    }
-
-    /** @test */
-    public function updates_inline_comments(): void
-    {
-        $file = <<<PHP
-        <?php
-        class User
-        {
-            /** existing */
-            public function method(): string
-            {
-                return '';
-            }
-        }
-        PHP;
-
-        $code = (new Annotator(['comment']))->process($file);
-
-        self::assertEquals(
-            <<<PHP
-            <?php
-            class User
-            {
-                /**
-                 * existing
                  * comment
                  */
-                public function method(): string
+                protected function method(): string
                 {
                     return '';
                 }

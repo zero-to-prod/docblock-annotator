@@ -1,70 +1,34 @@
 <?php
 
-namespace Tests\Unit;
+namespace Tests\Unit\Annotator;
 
 use Tests\TestCase;
-use Zerotoprod\DataModel\DataModel;
 use Zerotoprod\DocblockAnnotator\Annotator;
 
-class MixedTypesTest extends TestCase
+class ConstantTest extends TestCase
 {
     /** @test */
     public function adds_a_comment(): void
     {
         $file = <<<PHP
         <?php
-        class Change
+        class User
         {
-            use DataModel;
-        
-            public const start = 'start';
-            public int \$start;
-            public const end = 'end';
-            public int \$end;
-            public const text = 'text';
-            public string \$text;
+            public const CONSTANT = 'value';
         }
         PHP;
 
-        $code = (new Annotator(['Comment', 'test']))->process($file);
+        $code = (new Annotator(['comment']))->process($file);
 
         self::assertEquals(
             <<<PHP
             <?php
-            class Change
+            class User
             {
-                use DataModel;
-
                 /**
-                 * Comment
-                 * test
+                 * comment
                  */
-                public const start = 'start';
-                /**
-                 * Comment
-                 * test
-                 */
-                public int \$start;
-                /**
-                 * Comment
-                 * test
-                 */
-                public const end = 'end';
-                /**
-                 * Comment
-                 * test
-                 */
-                public int \$end;
-                /**
-                 * Comment
-                 * test
-                 */
-                public const text = 'text';
-                /**
-                 * Comment
-                 * test
-                 */
-                public string \$text;
+                public const CONSTANT = 'value';
             }
             PHP,
             $code
@@ -78,7 +42,7 @@ class MixedTypesTest extends TestCase
         <?php
         class User
         {
-            public string \$property = '';
+            public const CONSTANT = 'value';
         }
         PHP;
 
@@ -93,7 +57,7 @@ class MixedTypesTest extends TestCase
                  * comment1
                  * comment2
                  */
-                public string \$property = '';
+                public const CONSTANT = 'value';
             }
             PHP,
             $code
@@ -110,7 +74,7 @@ class MixedTypesTest extends TestCase
             /**
              * existing
              */
-            public string \$property = '';
+            public const CONSTANT = 'value';
         }
         PHP;
 
@@ -125,7 +89,7 @@ class MixedTypesTest extends TestCase
                  * existing
                  * comment
                  */
-                public string \$property = '';
+                public const CONSTANT = 'value';
             }
             PHP,
             $code
@@ -140,7 +104,7 @@ class MixedTypesTest extends TestCase
         class User
         {
             /** existing */
-            public string \$property = '';
+            public const CONSTANT = 'value';
         }
         PHP;
 
@@ -155,7 +119,7 @@ class MixedTypesTest extends TestCase
                  * existing
                  * comment
                  */
-                public string \$property = '';
+                public const CONSTANT = 'value';
             }
             PHP,
             $code
@@ -163,13 +127,13 @@ class MixedTypesTest extends TestCase
     }
 
     /** @test */
-    public function adds_a_comment_public_property(): void
+    public function adds_a_comment_public_constant(): void
     {
         $file = <<<PHP
         <?php
         class User
         {
-            public string \$property = '';
+            public const CONSTANT = 'value';
         }
         PHP;
 
@@ -183,7 +147,7 @@ class MixedTypesTest extends TestCase
                 /**
                  * comment
                  */
-                public string \$property = '';
+                public const CONSTANT = 'value';
             }
             PHP,
             $code
@@ -191,13 +155,13 @@ class MixedTypesTest extends TestCase
     }
 
     /** @test */
-    public function does_not_add_a_comment_public_property(): void
+    public function does_not_add_a_comment_public_constant(): void
     {
         $file = <<<PHP
         <?php
         class User
         {
-            public string \$property = '';
+            public const CONSTANT = 'value';
         }
         PHP;
 
@@ -208,7 +172,7 @@ class MixedTypesTest extends TestCase
             <?php
             class User
             {
-                public string \$property = '';
+                public const CONSTANT = 'value';
             }
             PHP,
             $code
@@ -216,13 +180,13 @@ class MixedTypesTest extends TestCase
     }
 
     /** @test */
-    public function adds_a_comment_private_property(): void
+    public function adds_a_comment_private_constant(): void
     {
         $file = <<<PHP
         <?php
         class User
         {
-            private string \$property = '';
+            private const CONSTANT = 'value';
         }
         PHP;
 
@@ -236,7 +200,7 @@ class MixedTypesTest extends TestCase
                 /**
                  * comment
                  */
-                private string \$property = '';
+                private const CONSTANT = 'value';
             }
             PHP,
             $code
@@ -244,13 +208,13 @@ class MixedTypesTest extends TestCase
     }
 
     /** @test */
-    public function adds_a_comment_protected_property(): void
+    public function adds_a_comment_protected_constant(): void
     {
         $file = <<<PHP
         <?php
         class User
         {
-            protected string \$property = '';
+            protected const CONSTANT = 'value';
         }
         PHP;
 
@@ -264,7 +228,71 @@ class MixedTypesTest extends TestCase
                 /**
                  * comment
                  */
-                protected string \$property = '';
+                protected const CONSTANT = 'value';
+            }
+            PHP,
+            $code
+        );
+    }
+
+    /** @test */
+    public function adds_a_comment_to_multiple_constants(): void
+    {
+        $file = <<<PHP
+        <?php
+        class User
+        {
+            public const CONSTANT_1 = 'value1',
+                         CONSTANT_2 = 'value2';
+        }
+        PHP;
+
+        $code = (new Annotator(['comment']))->process($file);
+
+        self::assertEquals(
+            <<<PHP
+            <?php
+            class User
+            {
+                /**
+                 * comment
+                 */
+                public const CONSTANT_1 = 'value1',
+                             CONSTANT_2 = 'value2';
+            }
+            PHP,
+            $code
+        );
+    }
+
+    /** @test */
+    public function updates_comments_on_multiple_constants(): void
+    {
+        $file = <<<PHP
+        <?php
+        class User
+        {
+            /**
+             * existing
+             */
+            public const CONSTANT_1 = 'value1',
+                         CONSTANT_2 = 'value2';
+        }
+        PHP;
+
+        $code = (new Annotator(['comment']))->process($file);
+
+        self::assertEquals(
+            <<<PHP
+            <?php
+            class User
+            {
+                /**
+                 * existing
+                 * comment
+                 */
+                public const CONSTANT_1 = 'value1',
+                             CONSTANT_2 = 'value2';
             }
             PHP,
             $code

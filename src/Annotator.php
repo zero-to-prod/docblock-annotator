@@ -9,62 +9,92 @@ use PhpParser\ParserFactory;
 use Zerotoprod\DocgenVisitor\DocgenVisitor;
 
 /**
+ * Processes the given PHP code by adding comments to the specified members.
+ *
  * @link https://github.com/zero-to-prod/docblock-annotator
  */
 class Annotator extends NodeVisitorAbstract
 {
     /**
+     * Indicates that the member type is a method.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const method = 'method';
     /**
+     * Indicates that the member type is a property.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const property = 'property';
     /**
+     * Indicates that the member type is a constant.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const constant = 'constant';
     /**
+     * Indicates that the member type is a class.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const class_ = 'class';
     /**
+     * Indicates that the member type is an interface.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const interface_ = 'interface';
     /**
+     * Indicates that the member type is an enum.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const enum = 'enum';
     /**
+     * Indicates that the member type is an enum case.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const enum_case = 'enum_case';
 
     /**
+     * Indicates that the visibility is public.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const public = 'public';
     /**
+     * Indicates that the visibility is private.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const private = 'private';
     /**
+     * Indicates that the visibility is protected.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public const protected = 'protected';
 
-    /** @var string[] Lines you want added to the docblock. */
+    /**
+     * @var string[] Lines you want added to the docblock.
+     */
     private array $comments;
 
-    /** @var string[] Visibility levels to target (public, private, protected). */
+    /**
+     * @var string[] Visibility levels to target (public, private, protected).
+     */
     private array $visibility;
 
-    /** @var string[] Member types to target (method, property, constant, class, enum, enum_case). */
+    /**
+     * @var string[] Member types to target (method, property, constant, class, enum, enum_case).
+     */
     private array $members;
 
     /**
+     * Initializes the Annotator with comments, visibility, and member types.
+     *
      * @param  array  $comments    Lines you want added to the docblock.
      * @param  array  $visibility  The visibility levels you want to target (public, private, protected).
      * @param  array  $members     The member types you want to target (method, property, constant, class, enum, enum_case).
@@ -82,6 +112,12 @@ class Annotator extends NodeVisitorAbstract
     }
 
     /**
+     * Processes the given PHP code by adding comments to the specified members.
+     *
+     * @param  string  $code  The PHP code to process.
+     *
+     * @return string The processed PHP code with added comments.
+     *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public function process(string $code): string
