@@ -14,7 +14,6 @@ class DocblockAnnotator extends NodeVisitorAbstract
 {
     /**
      * @link https://github.com/zero-to-prod/docblock-annotator
-     * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public static function update(
         string $directory,
