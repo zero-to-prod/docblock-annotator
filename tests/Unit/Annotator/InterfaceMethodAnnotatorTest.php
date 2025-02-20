@@ -4,6 +4,7 @@ namespace Tests\Unit\Annotator;
 
 use Tests\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
+use Zerotoprod\DocblockAnnotator\Statement;
 
 class InterfaceMethodAnnotatorTest extends TestCase
 {
@@ -18,7 +19,7 @@ class InterfaceMethodAnnotatorTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment'], ['public'], [Annotator::method]))->process($file);
+        $code = (new Annotator(['comment'], ['public'], [Statement::ClassMethod]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -46,7 +47,7 @@ class InterfaceMethodAnnotatorTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment1', 'comment2'], ['public'], [Annotator::method]))->process($file);
+        $code = (new Annotator(['comment1', 'comment2'], ['public'], [Statement::ClassMethod]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -78,7 +79,7 @@ class InterfaceMethodAnnotatorTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment'], ['public'], [Annotator::method]))->process($file);
+        $code = (new Annotator(['comment'], ['public'], [Statement::ClassMethod]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -110,7 +111,7 @@ class InterfaceMethodAnnotatorTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['@link https://github.com/zero-to-prod/arr'], ['public'], [Annotator::method]))->process($file);
+        $code = (new Annotator(['@link https://github.com/zero-to-prod/arr'], ['public'], [Statement::ClassMethod]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -139,7 +140,7 @@ class InterfaceMethodAnnotatorTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment'], ['public'], [Annotator::method]))->process($file);
+        $code = (new Annotator(['comment'], ['public'], [Statement::ClassMethod]))->process($file);
 
         self::assertEquals(
             <<<PHP
