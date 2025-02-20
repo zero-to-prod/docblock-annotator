@@ -18,8 +18,9 @@
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
-    - [updateDirectory](#updatedirectory)
-    - [updateFiles](#updatefiles)
+  - [Instantiation](#Instantiation)
+  - [updateDirectory](#updatedirectory)
+  - [updateFiles](#updatefiles)
 - [Local Development](./LOCAL_DEVELOPMENT.md)
 - [Contributing](#contributing)
 
@@ -53,7 +54,7 @@ use Zerotoprod\DocblockAnnotator\Statement;
 use Zerotoprod\DocblockAnnotator\Modifier;
 use PhpParser\ParserFactory;
 
-$Annotator = new DocblockAnnotator(
+$DocblockAnnotator = new DocblockAnnotator(
     modifiers: [Modifier::public],
     statements: [Statement::ClassMethod], // can also handle raw string: class_method
     success: fn(string $file, string $value) => echo "Updated: $file",
@@ -88,7 +89,10 @@ Arguments:
 Updates docblocks in all PHP files within a directory.
 
 ```php
-$Annotator->updateDirectory(
+use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
+
+/* @var DocblockAnnotator $DocblockAnnotator */
+$DocblockAnnotator->updateDirectory(
     comments: ['@link https://github.com/zero-to-prod/docblock-annotator'],
     directory: 'src',
     recursive: true
@@ -100,7 +104,10 @@ $Annotator->updateDirectory(
 Updates docblocks for a specified array of files.
 
 ```php
-$Annotator->updateFiles(
+use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
+
+/* @var DocblockAnnotator $DocblockAnnotator */
+$DocblockAnnotator->updateFiles(
     comments: ['@link https://github.com/zero-to-prod/docblock-annotator'],
     files: ['src/MyClass.php', 'src/AnotherClass.php']
 );
