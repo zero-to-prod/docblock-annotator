@@ -5,8 +5,9 @@ namespace Tests\Unit\DocblockAnnotator;
 use org\bovigo\vfs\vfsStream;
 use org\bovigo\vfs\vfsStreamDirectory;
 use Tests\TestCase;
-use Zerotoprod\DocblockAnnotator\Annotator;
 use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
+use Zerotoprod\DocblockAnnotator\Statement;
+use Zerotoprod\DocblockAnnotator\Modifier;
 
 class UpdateDirectoryTest extends TestCase
 {
@@ -21,15 +22,20 @@ class UpdateDirectoryTest extends TestCase
     /** @test */
     public function it_can_add_a_comment_to_a_class_using_update_method(): void
     {
-        $phpCode = <<<PHP
-        <?php
-        class Foo {}
-        PHP;
+        vfsStream::newFile('Foo.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+            <?php
+            class Foo {}
+            PHP);
 
         $filePath = vfsStream::url('root/Foo.php');
-        file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::updateDirectory($this->root->url(), ['comment'], [Annotator::public], [Annotator::class_]);
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::Class_]
+        );
+        $annotator->updateDirectory(['comment'], $this->root->url());
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -46,17 +52,22 @@ class UpdateDirectoryTest extends TestCase
     /** @test */
     public function it_can_add_comments_to_an_interface_using_update_method(): void
     {
-        $phpCode = <<<PHP
-        <?php
-        interface FooInterface {
-            public function doSomething(): void;
-        }
-        PHP;
+        vfsStream::newFile('FooInterface.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+            <?php
+            interface FooInterface {
+                public function doSomething(): void;
+            }
+            PHP);
 
         $filePath = vfsStream::url('root/FooInterface.php');
-        file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::updateDirectory($this->root->url(), ['interface comment'], [Annotator::public], [Annotator::interface_]);
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::Interface_]
+        );
+        $annotator->updateDirectory(['interface comment'], $this->root->url());
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -75,18 +86,23 @@ class UpdateDirectoryTest extends TestCase
     /** @test */
     public function it_can_add_comments_to_an_enum_using_update_method(): void
     {
-        $phpCode = <<<PHP
-        <?php
-        enum Suit {
-            case Hearts;
-            case Diamonds;
-        }
-        PHP;
+        vfsStream::newFile('Suit.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+            <?php
+            enum Suit {
+                case Hearts;
+                case Diamonds;
+            }
+            PHP);
 
         $filePath = vfsStream::url('root/Suit.php');
-        file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::updateDirectory($this->root->url(), ['enum comment'], [Annotator::public], [Annotator::enum]);
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::Enum_]
+        );
+        $annotator->updateDirectory(['enum comment'], $this->root->url());
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -106,18 +122,23 @@ class UpdateDirectoryTest extends TestCase
     /** @test */
     public function it_can_add_comments_to_enum_cases_using_update_method(): void
     {
-        $phpCode = <<<PHP
-        <?php
-        enum Suit {
-            case Hearts;
-            case Diamonds;
-        }
-        PHP;
+        vfsStream::newFile('SuitCases.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+            <?php
+            enum Suit {
+                case Hearts;
+                case Diamonds;
+            }
+            PHP);
 
         $filePath = vfsStream::url('root/SuitCases.php');
-        file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::updateDirectory($this->root->url(), ['enum case comment'], [Annotator::public], [Annotator::enum_case]);
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::EnumCase]
+        );
+        $annotator->updateDirectory(['enum case comment'], $this->root->url());
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -140,17 +161,22 @@ class UpdateDirectoryTest extends TestCase
     /** @test */
     public function it_can_add_comments_to_constants_using_update_method(): void
     {
-        $phpCode = <<<PHP
-        <?php
-        class Foo {
-            public const BAR = 'baz';
-        }
-        PHP;
+        vfsStream::newFile('ConstantsTest.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+            <?php
+            class Foo {
+                public const BAR = 'baz';
+            }
+            PHP);
 
         $filePath = vfsStream::url('root/ConstantsTest.php');
-        file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::updateDirectory($this->root->url(), ['constant comment'], [Annotator::public], [Annotator::constant]);
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::ClassConst]
+        );
+        $annotator->updateDirectory(['constant comment'], $this->root->url());
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -169,17 +195,22 @@ class UpdateDirectoryTest extends TestCase
     /** @test */
     public function it_can_add_comments_to_properties_using_update_method(): void
     {
-        $phpCode = <<<PHP
-        <?php
-        class Foo {
-            public \$bar = 'baz';
-        }
-        PHP;
+        vfsStream::newFile('PropertiesTest.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+            <?php
+            class Foo {
+                public \$bar = 'baz';
+            }
+            PHP);
 
         $filePath = vfsStream::url('root/PropertiesTest.php');
-        file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::updateDirectory($this->root->url(), ['property comment'], [Annotator::public], [Annotator::property]);
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::Property]
+        );
+        $annotator->updateDirectory(['property comment'], $this->root->url());
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -198,19 +229,24 @@ class UpdateDirectoryTest extends TestCase
     /** @test */
     public function it_can_add_comments_to_methods_using_update_method(): void
     {
-        $phpCode = <<<PHP
-        <?php
-        class Foo {
-            public function bar() {
-                return 'baz';
+        vfsStream::newFile('MethodsTest.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+            <?php
+            class Foo {
+                public function bar() {
+                    return 'baz';
+                }
             }
-        }
-        PHP;
+            PHP);
 
         $filePath = vfsStream::url('root/MethodsTest.php');
-        file_put_contents($filePath, $phpCode);
 
-        DocblockAnnotator::updateDirectory($this->root->url(), ['method comment'], [Annotator::public], [Annotator::method]);
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::ClassMethod]
+        );
+        $annotator->updateDirectory(['method comment'], $this->root->url());
 
         $updatedCode = file_get_contents($filePath);
         $expected = <<<PHP
@@ -226,5 +262,98 @@ class UpdateDirectoryTest extends TestCase
         PHP;
 
         $this->assertEquals($expected, $updatedCode);
+    }
+
+
+    /** @test */
+    public function it_only_annotates_specified_statements(): void
+    {
+        vfsStream::newFile('MixedStatements.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+        <?php
+        class Mixed {
+            public function method() {}
+            public const CONST = 'value';
+        }
+        PHP);
+
+        $filePath = vfsStream::url('root/MixedStatements.php');
+
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::ClassMethod]
+        );
+        $annotator->updateDirectory(['method comment'], $this->root->url());
+
+        $updated = file_get_contents($filePath);
+        $expected = <<<PHP
+    <?php
+    class Mixed {
+        /**
+         * method comment
+         */
+        public function method() {}
+        public const CONST = 'value';
+    }
+    PHP;
+        $this->assertEquals($expected, $updated);
+    }
+
+    /** @test */
+    public function it_calls_failure_callback_on_syntax_error(): void
+    {
+        vfsStream::newFile('ErrorFile.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+        <?php
+        class ErrorClass {
+            public function method() {
+                return 'error'
+            }
+        }
+        PHP); // Missing semicolon
+
+        vfsStream::url('root/ErrorFile.php');
+
+        $failures = [];
+        $failureCallback = static function (string $message) use (&$failures) {
+            $failures[] = $message;
+        };
+
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::ClassMethod],
+            failure: $failureCallback
+        );
+        $annotator->updateDirectory(['comment'], $this->root->url());
+
+        $this->assertNotEmpty($failures, 'Failure callback should have been called');
+        $this->assertStringContainsString('Syntax error', $failures[0]);
+    }
+
+    /** @test */
+    public function it_does_not_change_files_with_empty_comments(): void
+    {
+        vfsStream::newFile('EmptyComments.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+        <?php
+        class EmptyComments {
+            public function method() {}
+        }
+        PHP);
+
+        $filePath = vfsStream::url('root/EmptyComments.php');
+        $originalContent = file_get_contents($filePath);
+
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::ClassMethod]
+        );
+        $annotator->updateDirectory([], $this->root->url());
+
+        $updated = file_get_contents($filePath);
+        $this->assertEquals($originalContent, $updated);
     }
 }
