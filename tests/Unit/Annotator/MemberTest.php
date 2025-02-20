@@ -4,6 +4,7 @@ namespace Tests\Unit\Annotator;
 
 use Tests\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
+use Zerotoprod\DocblockAnnotator\Statement;
 
 class MemberTest extends TestCase
 {
@@ -29,7 +30,7 @@ class MemberTest extends TestCase
         $code = (new Annotator(
             ['comment'],
             ['public'],
-            [Annotator::method]
+            [Statement::ClassMethod]
         ))->process($file);
 
         self::assertEquals(
@@ -75,7 +76,7 @@ class MemberTest extends TestCase
         $code = (new Annotator(
             ['comment'],
             ['public'],
-            [Annotator::property]
+            [Statement::Property]
         ))->process($file);
 
         self::assertEquals(
@@ -121,7 +122,7 @@ class MemberTest extends TestCase
         $code = (new Annotator(
             ['comment'],
             ['public'],
-            [Annotator::constant]
+            [Statement::ClassConst]
         ))->process($file);
 
         self::assertEquals(
@@ -167,7 +168,7 @@ class MemberTest extends TestCase
         $code = (new Annotator(
             ['comment'],
             ['public'],
-            [Annotator::method, Annotator::property]
+            [Statement::ClassMethod, Statement::Property, Statement::Property]
         ))->process($file);
 
         self::assertEquals(
