@@ -41,20 +41,71 @@ This will add the package to your project’s dependencies and create an autoloa
 
 ## Usage
 
-Add comments to class members.
+### updateDirectory
+
+Updates docblocks in all PHP files within a directory.
 
 ```php
 use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
-use Zerotoprod\DocblockAnnotator\Annotator;
+use Zerotoprod\DocblockAnnotator\Statement;
+use Zerotoprod\DocblockAnnotator\Modifier;
+use PhpParser\ParserFactory;
 
 DocblockAnnotator::updateDirectory(
     'src',
     ['@link https://github.com/zero-to-prod/docblock-annotator'],
-    [Annotator::public, Annotator::private, Annotator::protected],
-    [Annotator::method, Annotator::property, Annotator::constant, Annotator::enum, Annotator::enum_case],
+    [Modifier::public],
+    [Statement::ClassMethod],
     fn(string $file, string $value) => echo $value,
     fn(Throwable $Throwable) => echo $Throwable->getMessage(),
-    true // recursive
+    true, // recursive
+    (new ParserFactory)->createForHostVersion()
+);
+```
+
+### updateFiles
+
+Updates docblocks for a specified array of files.
+
+```php
+use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
+use Zerotoprod\DocblockAnnotator\Statement;
+use Zerotoprod\DocblockAnnotator\Modifier;
+use PhpParser\ParserFactory;
+
+$files = ['src/MyClass.php', 'src/AnotherClass.php'];
+
+DocblockAnnotator::updateFiles(
+    $files,
+    ['@link https://github.com/zero-to-prod/docblock-annotator'],
+    [Modifier::public],
+    [Statement::ClassMethod],
+    fn(string $file, string $value) => echo $value,
+    fn(Throwable $Throwable) => echo $Throwable->getMessage(),
+    (new ParserFactory)->createForHostVersion()
+);
+```
+
+### updateFiles
+
+Updates docblocks for a specified array of files.
+
+```php
+use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
+use Zerotoprod\DocblockAnnotator\Statement;
+use Zerotoprod\DocblockAnnotator\Modifier;
+use PhpParser\ParserFactory;
+
+$files = ['src/MyClass.php', 'src/AnotherClass.php'];
+
+DocblockAnnotator::updateFiles(
+    $files,
+    ['@link https://github.com/zero-to-prod/docblock-annotator'],
+    [Modifier::public],
+    [Statement::ClassMethod],
+    fn(string $file, string $value) => echo $value,
+    fn(Throwable $Throwable) => echo $Throwable->getMessage(),
+    (new ParserFactory)->createForHostVersion()
 );
 ```
 
