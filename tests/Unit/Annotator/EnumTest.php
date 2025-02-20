@@ -4,6 +4,8 @@ namespace Tests\Unit\Annotator;
 
 use Tests\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
+use Zerotoprod\DocblockAnnotator\Statement;
+use Zerotoprod\DocblockAnnotator\Modifier;
 
 class EnumTest extends TestCase
 {
@@ -22,8 +24,8 @@ class EnumTest extends TestCase
         // We only annotate 'enum', ignoring cases.
         $code = (new Annotator(
             ['comment'],
-            [Annotator::public],  // Visibility includes 'public'
-            [Annotator::enum]     // Only want to annotate the enum declaration
+            [Modifier::public],  // Visibility includes 'public'
+            [Statement::Enum_]     // Only want to annotate the enum declaration
         ))->process($file);
 
         self::assertEquals(
@@ -58,8 +60,8 @@ class EnumTest extends TestCase
 
         $code = (new Annotator(
             ['newComment'],
-            [Annotator::public],
-            [Annotator::enum]
+            [Modifier::public],
+            [Statement::Enum_]
         ))->process($file);
 
         self::assertEquals(
@@ -93,8 +95,8 @@ class EnumTest extends TestCase
         // Annotate only enum cases (not the enum itself)
         $code = (new Annotator(
             ['comment'],
-            [Annotator::public],
-            [Annotator::enum_case]
+            [Modifier::public],
+            [Statement::EnumCase]
         ))->process($file);
 
         self::assertEquals(
@@ -132,8 +134,8 @@ class EnumTest extends TestCase
 
         $code = (new Annotator(
             ['newComment'],
-            [Annotator::public],
-            [Annotator::enum_case]
+            [Modifier::public],
+            [Statement::EnumCase]
         ))->process($file);
 
         self::assertEquals(
@@ -169,8 +171,8 @@ class EnumTest extends TestCase
         // Same comment as existing
         $code = (new Annotator(
             ['@link https://github.com/zero-to-prod/example'],
-            [Annotator::public],
-            [Annotator::enum]
+            [Modifier::public],
+            [Statement::Enum_]
         ))->process($file);
 
         // Should remain unchanged
@@ -205,8 +207,8 @@ class EnumTest extends TestCase
 
         $code = (new Annotator(
             ['existing'],  // This line is already there
-            [Annotator::public],
-            [Annotator::enum_case]
+            [Modifier::public],
+            [Statement::EnumCase]
         ))->process($file);
 
         self::assertEquals(
@@ -239,8 +241,8 @@ class EnumTest extends TestCase
         // We annotate both the enum and the enum cases
         $code = (new Annotator(
             ['comment'],
-            [Annotator::public],
-            [Annotator::enum, Annotator::enum_case]
+            [Modifier::public],
+            [Statement::Enum_, Statement::EnumCase]
         ))->process($file);
 
         self::assertEquals(
@@ -280,8 +282,8 @@ class EnumTest extends TestCase
         // We don't list enum or enum_case in $members
         $code = (new Annotator(
             ['comment'],
-            [Annotator::public],
-            [Annotator::class_] // only 'class' - not enum
+            [Modifier::public],
+            [Statement::Class_] // only 'class' - not enum
         ))->process($file);
 
         self::assertEquals(
@@ -314,8 +316,8 @@ class EnumTest extends TestCase
 
         $code = (new Annotator(
             ['comment'],
-            [Annotator::private],
-            [Annotator::enum_case]
+            [Modifier::private],
+            [Statement::EnumCase]
         ))->process($file);
 
         self::assertEquals(

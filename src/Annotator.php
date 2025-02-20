@@ -5,7 +5,10 @@ namespace Zerotoprod\DocblockAnnotator;
 use PhpParser\Node;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitorAbstract;
+use PhpParser\Parser;
 use PhpParser\ParserFactory;
+use ReflectionClass;
+use Zerotoprod\DocgenVisitor\Change;
 use Zerotoprod\DocgenVisitor\DocgenVisitor;
 
 /**
@@ -15,74 +18,6 @@ use Zerotoprod\DocgenVisitor\DocgenVisitor;
  */
 class Annotator extends NodeVisitorAbstract
 {
-    /**
-     * Indicates that the member type is a method.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const method = 'method';
-    /**
-     * Indicates that the member type is a property.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const property = 'property';
-    /**
-     * Indicates that the member type is a constant.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const constant = 'constant';
-    /**
-     * Indicates that the member type is a class.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const class_ = 'class';
-    /**
-     * Indicates that the member type is an interface.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const interface_ = 'interface';
-
-    /**
-     * Indicates that the member type is a trait.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const trait_ = 'trait';
-    /**
-     * Indicates that the member type is an enum.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const enum = 'enum';
-    /**
-     * Indicates that the member type is an enum case.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const enum_case = 'enum_case';
-
-    /**
-     * Indicates that the visibility is public.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const public = 'public';
-    /**
-     * Indicates that the visibility is private.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const private = 'private';
-    /**
-     * Indicates that the visibility is protected.
-     *
-     * @link https://github.com/zero-to-prod/docblock-annotator
-     */
-    public const protected = 'protected';
 
     /**
      * @var string[] Lines you want added to the docblock.
@@ -90,32 +25,38 @@ class Annotator extends NodeVisitorAbstract
     private array $comments;
 
     /**
-     * @var string[] Visibility levels to target (public, private, protected).
+     * @var Modifier[] Visibility levels to target (public, private, protected).
      */
-    private array $visibility;
+    private array $modifiers;
 
     /**
-     * @var string[] Member types to target (method, property, constant, class, enum, enum_case).
+     * @var Statement[] Member types to target (method, property, constant, class, enum, enum_case).
      */
-    private array $members;
+    private array $statements;
 
     /**
      * Initializes the Annotator with comments, visibility, and member types.
      *
-     * @param  array  $comments    Lines you want added to the docblock.
-     * @param  array  $visibility  The visibility levels you want to target (public, private, protected).
-     * @param  array  $members     The member types you want to target (method, property, constant, class, enum, enum_case).
+     * @param  array              $comments    Lines you want added to the docblock.
+     * @param  array|Modifier[]   $modifiers   The visibility levels you want to target (public, private, protected).
+     * @param  array|Statement[]  $statements  The member types you want to target (method, property, constant, class, enum, enum_case).
+     * @param ?Parser             $Parser      Parses PHP code into a node tree.
      *
      * @link https://github.com/zero-to-prod/docblock-annotator
      */
     public function __construct(
         array $comments,
-        array $visibility = [self::public],
-        array $members = [self::method, self::property, self::constant]
+        array $modifiers = [Modifier::public],
+        array $statements = [Statement::ClassMethod, Statement::Property, Statement::Const_, Statement::Function_, Statement::ClassConst],
+        private readonly ?Parser $Parser = null
     ) {
         $this->comments = $comments;
-        $this->visibility = array_map('strtolower', $visibility);
-        $this->members = array_map('strtolower', $members);
+        $this->modifiers = array_filter(array_map(static fn(mixed $value) => $value instanceof Modifier
+            ? $value
+            : Modifier::tryFrom(strtolower($value)), $modifiers));
+        $this->statements = array_filter(array_map(static fn(mixed $value) => $value instanceof Statement
+            ? $value
+            : Statement::tryFrom(strtolower($value)), $statements));
     }
 
     /**
@@ -129,43 +70,21 @@ class Annotator extends NodeVisitorAbstract
      */
     public function process(string $code): string
     {
-        $NodeTraverser = new NodeTraverser();
+        /** @var Change[] $changes */
         $changes = [];
-        $NodeTraverser->addVisitor(new DocgenVisitor(function (Node $Node) {
-            $unknown_node = !in_array(
-                match (true) {
-                    $Node instanceof Node\Stmt\ClassMethod => self::method,
-                    $Node instanceof Node\Stmt\Property => self::property,
-                    $Node instanceof Node\Stmt\ClassConst => self::constant,
-                    $Node instanceof Node\Stmt\Class_ => self::class_,
-                    $Node instanceof Node\Stmt\Enum_ => self::enum,
-                    $Node instanceof Node\Stmt\EnumCase => self::enum_case,
-                    $Node instanceof Node\Stmt\Interface_ => self::interface_,
-                    $Node instanceof Node\Stmt\Trait_ => self::trait_,
-                    default => null
-                },
-                $this->members,
-                true
-            );
 
-            if ($unknown_node) {
-                return [];
-            }
-
-            return $Node instanceof Node\Stmt\Class_
-            || $Node instanceof Node\Stmt\Enum_
-            || $Node instanceof Node\Stmt\Interface_
-            || $Node instanceof Node\Stmt\Trait_
-            || $this->hasMatchingVisibility($Node)
-                ? $this->dedupe(
-                    $Node->getDocComment()
-                        ? $Node->getDocComment()->getText()
-                        : ''
-                )
-                : [];
-        }, $changes));
-
-        $NodeTraverser->traverse((new ParserFactory)->createForHostVersion()->parse($code));
+        $NodeTraverser = new NodeTraverser();
+        $NodeTraverser->addVisitor(
+            new DocgenVisitor(
+                fn(Node $Node) => $this->getCommentLinesForIncludedNode($Node),
+                $changes
+            )
+        );
+        $NodeTraverser->traverse(
+            $this->Parser
+                ? $this->Parser->parse($code)
+                : (new ParserFactory)->createForHostVersion()->parse($code)
+        );
 
         foreach (array_reverse($changes) as $change) {
             $code = substr_replace(
@@ -179,28 +98,66 @@ class Annotator extends NodeVisitorAbstract
         return $code;
     }
 
+    /**
+     * Returns comment lines for supported nodes.
+     */
+    private function getCommentLinesForIncludedNode(Node $Node): array
+    {
+        $node_type = (new ReflectionClass($Node))->getShortName();
+        $statement_type = defined(Statement::class."::$node_type")
+            ? constant(Statement::class."::$node_type")
+            : null;
+
+        $unsupported_statement = !$statement_type || !in_array($statement_type, $this->statements, true);
+
+        if ($unsupported_statement) {
+            return [];
+        }
+
+        $validNode = $Node instanceof Node\Stmt\Class_
+            || $Node instanceof Node\Stmt\Enum_
+            || $Node instanceof Node\Stmt\Interface_
+            || $Node instanceof Node\Stmt\Trait_
+            || $Node instanceof Node\Stmt\Function_
+            || $this->hasMatchingVisibility($Node);
+
+        return $validNode
+            ? $this->dedupe($Node->getDocComment()?->getReformattedText() ?? '')
+            : [];
+    }
+
+    /**
+     * Checks if a node's visibility matches the configured visibility levels.
+     */
     private function hasMatchingVisibility(Node $Node): bool
     {
+        if ($Node instanceof Node\Stmt\Const_ || $Node instanceof Node\Stmt\Function_) {
+            return true;
+        }
+
         if ($Node instanceof Node\Stmt\EnumCase) {
-            return in_array(self::public, $this->visibility, true);
+            return in_array(Modifier::public, $this->modifiers, true);
         }
 
         $visibility = match (true) {
-            $Node->isPublic() => self::public,
-            $Node->isProtected() => self::protected,
-            $Node->isPrivate() => self::private,
+            method_exists($Node, 'isPublic') && $Node->isPublic() => Modifier::public,
+            method_exists($Node, 'isProtected') && $Node->isProtected() => Modifier::protected,
+            method_exists($Node, 'isPrivate') && $Node->isPrivate() => Modifier::private,
             default => null
         };
 
-        return $visibility !== null && in_array($visibility, $this->visibility, true);
+        return $visibility !== null && in_array($visibility, $this->modifiers, true);
     }
 
-    private function dedupe(string $docblock): array
+    /**
+     * Removes duplicate comments by comparing existing docblock text with new comments.
+     */
+    private function dedupe(string $text): array
     {
         return array_filter(
             $this->comments,
             static fn($line) => !str_contains(
-                preg_replace('/\s+/', '', $docblock),
+                preg_replace('/\s+/', '', $text),
                 preg_replace('/\s+/', '', $line)
             )
         );

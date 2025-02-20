@@ -4,6 +4,8 @@ namespace Zerotoprod\DocblockAnnotator;
 
 use Closure;
 use PhpParser\NodeVisitorAbstract;
+use PhpParser\Parser;
+use SplFileInfo;
 use Throwable;
 use Zerotoprod\Filesystem\Filesystem;
 
@@ -17,105 +19,108 @@ use Zerotoprod\Filesystem\Filesystem;
  */
 class DocblockAnnotator extends NodeVisitorAbstract
 {
+
+    /**
+     * Instantiates the class.
+     *
+     * @param  array         $modifiers   Visibility levels to target (default: [Modifier::public])
+     * @param  array         $statements  Statement types to target (default: various class elements)
+     * @param  Closure|null  $success     Callback function to execute on successful update
+     * @param  Closure|null  $failure     Callback function to execute if an error occurs
+     * @param  Parser|null   $Parser      Parser instance to parse PHP code into a node tree
+     *
+     * @link https://github.com/zero-to-prod/docblock-annotator
+     */
+    public function __construct(
+        private readonly array $modifiers = [Modifier::public],
+        private readonly array $statements = [
+            Statement::ClassMethod,
+            Statement::Const_,
+            Statement::Class_,
+            Statement::ClassConst,
+            Statement::EnumCase,
+            Statement::Enum_,
+            Statement::Function_,
+            Statement::Trait_,
+            Statement::Property,
+            Statement::Interface_,
+        ],
+        private readonly ?Closure $success = null,
+        private readonly ?Closure $failure = null,
+        private readonly ?Parser $Parser = null
+    ) {
+    }
+
     /**
      * Updates docblocks in all PHP files within a directory.
      *
-     * @param  string        $directory   The directory path to process.
-     * @param  array         $comments    The comments to add to docblocks.
-     * @param  array         $visibility  Visibility levels to target; defaults to public only.
-     * @param  array         $members     Member types to target; defaults to methods, properties, and constants.
-     * @param  Closure|null  $success     Callback function to execute on successful update.
-     * @param  Closure|null  $failure     Callback function to execute if an error occurs.
-     * @param  bool          $recursive   Whether to process files recursively in the directory; defaults to true.
+     * @param  array   $comments   The comments to add to docblocks
+     * @param  string  $directory  The directory path to process
+     * @param  bool    $recursive  Whether to process files recursively (default: true)
      *
      * @return void
      * @throws Throwable
+     * @link https://github.com/zero-to-prod/docblock-annotator
      */
-    public static function updateDirectory(
-        string $directory,
+    public function updateDirectory(
         array $comments,
-        array $visibility = [Annotator::public],
-        array $members = [Annotator::method, Annotator::property, Annotator::constant],
-        ?Closure $success = null,
-        ?Closure $failure = null,
-        bool $recursive = true
+        string $directory,
+        bool $recursive = true,
     ): void {
-        $files = $recursive
-            ? Filesystem::getFilesByExtensionRecursive($directory, 'php')
-            : Filesystem::getFilesByExtension($directory, 'php');
-
-        foreach ($files as $file) {
-            self::updateFile($file, $comments, $visibility, $members, $success, $failure);
-        }
+        $this->updateFiles(
+            $comments,
+            $recursive
+                ? Filesystem::getFilesByExtensionRecursive($directory, 'php')
+                : Filesystem::getFilesByExtension($directory, 'php')
+        );
     }
 
     /**
      * Updates docblocks for a specified array of files.
      *
-     * @param  array         $files       An array of file paths to update.
-     * @param  array         $comments    The comments to add to docblocks.
-     * @param  array         $visibility  Visibility levels to target; defaults to public only.
-     * @param  array         $members     Member types to target; defaults to methods, properties, and constants.
-     * @param  Closure|null  $success     Callback function to execute on successful update.
-     * @param  Closure|null  $failure     Callback function to execute if an error occurs.
+     * @param  array  $comments  The comments to add to docblocks
+     * @param  array  $files     Array of file paths to update
      *
      * @return void
      * @throws Throwable
+     * @link https://github.com/zero-to-prod/docblock-annotator
      */
-    public static function updateFiles(
-        array $files,
-        array $comments,
-        array $visibility = [Annotator::public],
-        array $members = [Annotator::method, Annotator::property, Annotator::constant],
-        ?Closure $success = null,
-        ?Closure $failure = null
-    ): void {
+    public function updateFiles(array $comments, array $files = []): void
+    {
         foreach ($files as $file) {
-            self::updateFile($file, $comments, $visibility, $members, $success, $failure);
-        }
-    }
+            try {
+                // Determine the file path based on type
+                $filePath = $file instanceof SplFileInfo ? $file->getPathname() : $file;
 
-    /**
-     * Updates the docblock for a single file.
-     *
-     * @param  string        $file        The path to the file to update.
-     * @param  array         $comments    The comments to add to docblocks.
-     * @param  array         $visibility  Visibility levels to target; defaults to public only.
-     * @param  array         $members     Member types to target; defaults to methods, properties, and constants.
-     * @param  Closure|null  $success     Callback function to execute on successful update.
-     * @param  Closure|null  $failure     Callback function to execute if an error occurs.
-     *
-     * @return void
-     * @throws Throwable If an error occurs during file operations or code processing.
-     */
-    public static function updateFile(
-        string $file,
-        array $comments,
-        array $visibility = [Annotator::public],
-        array $members = [Annotator::method, Annotator::property, Annotator::constant],
-        ?Closure $success = null,
-        ?Closure $failure = null
-    ): void {
-        try {
-            $code = file_get_contents($file);
-
-            if ($code === false) {
-                return;
-            }
-
-            $value = (new Annotator($comments, $visibility, $members))->process($code);
-
-            if ($value !== $code) {
-                file_put_contents($file, $value);
-                if ($success) {
-                    $success($file, $value);
+                // Skip if the path is empty or invalid
+                if (empty($filePath)) {
+                    continue;
                 }
-            }
-        } catch (Throwable $Throwable) {
-            if ($failure) {
-                $failure($Throwable->getMessage());
-            } else {
-                throw new $Throwable;
+
+                $code = file_get_contents($filePath);
+                if ($code === false) {
+                    continue; // Skip if file cannot be read
+                }
+
+                $value = (new Annotator(
+                    $comments,
+                    $this->modifiers,
+                    $this->statements,
+                    $this->Parser
+                ))->process($code);
+
+                if ($value !== $code) {
+                    file_put_contents($filePath, $value);
+                    if ($this->success) {
+                        ($this->success)($filePath, $value);
+                    }
+                }
+            } catch (Throwable $throwable) {
+                if ($this->failure) {
+                    ($this->failure)($throwable->getMessage());
+                } else {
+                    throw $throwable;
+                }
             }
         }
     }

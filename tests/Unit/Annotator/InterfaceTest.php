@@ -4,6 +4,7 @@ namespace Tests\Unit\Annotator;
 
 use Tests\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
+use Zerotoprod\DocblockAnnotator\Statement;
 
 class InterfaceTest extends TestCase
 {
@@ -18,7 +19,7 @@ class InterfaceTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment'], ['public'], [Annotator::interface_]))->process($file);
+        $code = (new Annotator(['comment'], ['public'], [Statement::Interface_]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -46,7 +47,7 @@ class InterfaceTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment1', 'comment2'], ['public'], [Annotator::interface_]))->process($file);
+        $code = (new Annotator(['comment1', 'comment2'], ['public'], [Statement::Interface_]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -78,7 +79,7 @@ class InterfaceTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment'], ['public'], [Annotator::interface_]))->process($file);
+        $code = (new Annotator(['comment'], ['public'], [Statement::Interface_]))->process($file);
 
         self::assertEquals(
             <<<PHP

@@ -4,6 +4,7 @@ namespace Tests\Unit\Annotator;
 
 use Tests\TestCase;
 use Zerotoprod\DocblockAnnotator\Annotator;
+use Zerotoprod\DocblockAnnotator\Statement;
 
 class ClassTest extends TestCase
 {
@@ -21,7 +22,7 @@ class ClassTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment'], ['public'], [Annotator::class_]))->process($file);
+        $code = (new Annotator(['comment'], ['public'], [Statement::Class_]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -55,7 +56,7 @@ class ClassTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment1', 'comment2'], ['public'], [Annotator::class_]))->process($file);
+        $code = (new Annotator(['comment1', 'comment2'], ['public'], [Statement::Class_]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -93,7 +94,7 @@ class ClassTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment'], ['public'], [Annotator::class_]))->process($file);
+        $code = (new Annotator(['comment'], ['public'], [Statement::Class_]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -131,7 +132,7 @@ class ClassTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['@link https://github.com/zero-to-prod/arr'], ['public'], [Annotator::class_]))->process($file);
+        $code = (new Annotator(['@link https://github.com/zero-to-prod/arr'], ['public'], [Statement::Class_]))->process($file);
 
         self::assertEquals(
             <<<PHP
@@ -166,7 +167,7 @@ class ClassTest extends TestCase
         }
         PHP;
 
-        $code = (new Annotator(['comment'], ['public'], [Annotator::class_]))->process($file);
+        $code = (new Annotator(['comment'], ['public'], [Statement::Class_]))->process($file);
 
         self::assertEquals(
             <<<PHP
