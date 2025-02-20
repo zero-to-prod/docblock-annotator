@@ -18,8 +18,8 @@
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
-  - [updateDirectory](#updatedirectory)
-  - [updateFiles](#updatefiles)
+    - [updateDirectory](#updatedirectory)
+    - [updateFiles](#updatefiles)
 - [Local Development](./LOCAL_DEVELOPMENT.md)
 - [Contributing](#contributing)
 
@@ -43,9 +43,9 @@ This will add the package to your project’s dependencies and create an autoloa
 
 ## Usage
 
-### updateDirectory
+### Instantiation
 
-Updates docblocks in all PHP files within a directory.
+Create a new `DocblockAnnotator` instance with your desired configuration:
 
 ```php
 use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
@@ -53,15 +53,45 @@ use Zerotoprod\DocblockAnnotator\Statement;
 use Zerotoprod\DocblockAnnotator\Modifier;
 use PhpParser\ParserFactory;
 
-DocblockAnnotator::updateDirectory(
-    'src',
-    ['@link https://github.com/zero-to-prod/docblock-annotator'],
-    [Modifier::public],
-    [Statement::ClassMethod], // also can take a matching raw string: class_name
-    fn(string $file, string $value) => echo $value,
-    fn(Throwable $Throwable) => echo $Throwable->getMessage(),
-    true, // recursive
+$Annotator = new DocblockAnnotator(
+    modifiers: [Modifier::public],
+    statements: [Statement::ClassMethod], // can also handle raw string: class_method
+    success: fn(string $file, string $value) => echo "Updated: $file",
+    failure: fn(Throwable $e) => echo $e->getMessage(),
     (new ParserFactory)->createForHostVersion()
+);
+```
+
+Arguments:
+
+- `modifiers`: Array of visibility modifiers to target
+    - `public`
+    - `protected`
+    - `private`
+- `statements`: Array of statement types to process
+    - `class_method`
+    - `const`
+    - `class`
+    - `class_const`
+    - `enum_case`
+    - `enum`
+    - `function`
+    - `trait`
+    - `property`
+    - `interface`
+- `success`: Callback function executed after successful file processing
+- `failure`: Callback function executed when an error occurs
+- `Parser`: Optional PHP-Parser instance (defaults to host PHP version)
+
+### updateDirectory
+
+Updates docblocks in all PHP files within a directory.
+
+```php
+$Annotator->updateDirectory(
+    comments: ['@link https://github.com/zero-to-prod/docblock-annotator'],
+    directory: 'src',
+    recursive: true
 );
 ```
 
@@ -70,21 +100,9 @@ DocblockAnnotator::updateDirectory(
 Updates docblocks for a specified array of files.
 
 ```php
-use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
-use Zerotoprod\DocblockAnnotator\Statement;
-use Zerotoprod\DocblockAnnotator\Modifier;
-use PhpParser\ParserFactory;
-
-$files = ['src/MyClass.php', 'src/AnotherClass.php'];
-
-DocblockAnnotator::updateFiles(
-    $files,
-    ['@link https://github.com/zero-to-prod/docblock-annotator'],
-    [Modifier::public],
-    [Statement::ClassMethod],
-    fn(string $file, string $value) => echo $value,
-    fn(Throwable $Throwable) => echo $Throwable->getMessage(),
-    (new ParserFactory)->createForHostVersion()
+$Annotator->updateFiles(
+    comments: ['@link https://github.com/zero-to-prod/docblock-annotator'],
+    files: ['src/MyClass.php', 'src/AnotherClass.php']
 );
 ```
 
