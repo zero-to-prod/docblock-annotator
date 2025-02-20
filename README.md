@@ -57,7 +57,7 @@ DocblockAnnotator::updateDirectory(
     'src',
     ['@link https://github.com/zero-to-prod/docblock-annotator'],
     [Modifier::public],
-    [Statement::ClassMethod],
+    [Statement::ClassMethod], // also can take a matching raw string: class_name
     fn(string $file, string $value) => echo $value,
     fn(Throwable $Throwable) => echo $Throwable->getMessage(),
     true, // recursive
