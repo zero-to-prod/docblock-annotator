@@ -5,6 +5,7 @@ namespace Zerotoprod\DocblockAnnotator;
 use Closure;
 use PhpParser\NodeVisitorAbstract;
 use PhpParser\Parser;
+use SplFileInfo;
 use Throwable;
 use Zerotoprod\Filesystem\Filesystem;
 
@@ -89,7 +90,7 @@ class DocblockAnnotator extends NodeVisitorAbstract
         foreach ($files as $file) {
             try {
                 // Determine the file path based on type
-                $filePath = $file instanceof \SplFileInfo ? $file->getPathname() : $file;
+                $filePath = $file instanceof SplFileInfo ? $file->getPathname() : $file;
 
                 // Skip if the path is empty or invalid
                 if (empty($filePath)) {
