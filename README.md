@@ -86,29 +86,6 @@ DocblockAnnotator::updateFiles(
 );
 ```
 
-### updateFiles
-
-Updates docblocks for a specified array of files.
-
-```php
-use Zerotoprod\DocblockAnnotator\DocblockAnnotator;
-use Zerotoprod\DocblockAnnotator\Statement;
-use Zerotoprod\DocblockAnnotator\Modifier;
-use PhpParser\ParserFactory;
-
-$files = ['src/MyClass.php', 'src/AnotherClass.php'];
-
-DocblockAnnotator::updateFiles(
-    $files,
-    ['@link https://github.com/zero-to-prod/docblock-annotator'],
-    [Modifier::public],
-    [Statement::ClassMethod],
-    fn(string $file, string $value) => echo $value,
-    fn(Throwable $Throwable) => echo $Throwable->getMessage(),
-    (new ParserFactory)->createForHostVersion()
-);
-```
-
 ## Contributing
 
 Contributions, issues, and feature requests are welcome!
