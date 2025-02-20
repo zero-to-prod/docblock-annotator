@@ -18,6 +18,8 @@
 - [Requirements](#requirements)
 - [Installation](#installation)
 - [Usage](#usage)
+  - [updateDirectory](#updatedirectory)
+  - [updateFiles](#updatefiles)
 - [Local Development](./LOCAL_DEVELOPMENT.md)
 - [Contributing](#contributing)
 
