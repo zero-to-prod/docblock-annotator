@@ -17,6 +17,8 @@
 - [Introduction](#introduction)
 - [Requirements](#requirements)
 - [Installation](#installation)
+- [Documentation Publishing](#documentation-publishing)
+  - [Automatic Documentation Publishing](#automatic-documentation-publishing)
 - [Usage](#usage)
   - [Instantiation](#Instantiation)
   - [updateDirectory](#updatedirectory)
@@ -40,7 +42,40 @@ Install `Zerotoprod\DocblockAnnotator` via [Composer](https://getcomposer.org/):
 composer require zero-to-prod/docblock-annotator
 ```
 
-This will add the package to your project’s dependencies and create an autoloader entry for it.
+This will add the package to your project's dependencies and create an autoloader entry for it.
+
+## Documentation Publishing
+
+You can publish this README to your local documentation directory.
+
+This can be useful for providing documentation for AI agents.
+
+This can be done using the included script:
+
+```bash
+# Publish to default location (./docs/zero-to-prod/docblock-annotator)
+vendor/bin/zero-to-prod-docblock-annotator
+
+# Publish to custom directory
+vendor/bin/zero-to-prod-docblock-annotator /path/to/your/docs
+```
+
+### Automatic Documentation Publishing
+
+You can automatically publish documentation by adding the following to your `composer.json`:
+
+```json
+{
+    "scripts": {
+        "post-install-cmd": [
+            "zero-to-prod-docblock-annotator"
+        ],
+        "post-update-cmd": [
+            "zero-to-prod-docblock-annotator"
+        ]
+    }
+}
+```
 
 ## Usage
 
