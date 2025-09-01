@@ -16,6 +16,7 @@ use Zerotoprod\Filesystem\Filesystem;
  * classes, methods, properties, etc., based on visibility and member type criteria.
  *
  * @link https://github.com/zero-to-prod/docblock-annotator
+ * An annotator for PHP docblocks.
  */
 class DocblockAnnotator extends NodeVisitorAbstract
 {
