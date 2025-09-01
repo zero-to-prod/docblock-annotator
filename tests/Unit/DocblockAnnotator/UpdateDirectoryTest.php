@@ -317,8 +317,8 @@ class UpdateDirectoryTest extends TestCase
         vfsStream::url('root/ErrorFile.php');
 
         $failures = [];
-        $failureCallback = static function (string $message) use (&$failures) {
-            $failures[] = $message;
+        $failureCallback = static function (\Throwable $throwable) use (&$failures) {
+            $failures[] = $throwable->getMessage();
         };
 
         $annotator = new DocblockAnnotator(
@@ -355,5 +355,36 @@ class UpdateDirectoryTest extends TestCase
 
         $updated = file_get_contents($filePath);
         $this->assertEquals($originalContent, $updated);
+    }
+
+    /** @test */
+    public function it_passes_throwable_object_to_failure_callback(): void
+    {
+        vfsStream::newFile('ErrorFile.php')
+            ->at($this->root)
+            ->setContent(<<<PHP
+        <?php
+        class ErrorClass {
+            public function method() {
+                return 'error'
+            }
+        }
+        PHP); // Missing semicolon
+
+        $thrownException = null;
+        $failureCallback = static function (\Throwable $e) use (&$thrownException) {
+            $thrownException = $e;
+        };
+
+        $annotator = new DocblockAnnotator(
+            modifiers: [Modifier::public],
+            statements: [Statement::ClassMethod],
+            failure: $failureCallback
+        );
+        
+        $annotator->updateDirectory(['comment'], $this->root->url());
+
+        $this->assertInstanceOf(\Throwable::class, $thrownException, 'Failure callback should receive a Throwable object');
+        $this->assertStringContainsString('Syntax error', $thrownException->getMessage());
     }
 }

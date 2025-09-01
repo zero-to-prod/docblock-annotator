@@ -118,7 +118,7 @@ class DocblockAnnotator extends NodeVisitorAbstract
                 }
             } catch (Throwable $throwable) {
                 if ($this->failure) {
-                    ($this->failure)($throwable->getMessage());
+                    ($this->failure)($throwable);
                 } else {
                     throw $throwable;
                 }
