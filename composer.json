@@ -32,7 +32,7 @@
     }
   ],
   "require": {
-    "php": ">=8.1",
+    "php": ">=7.4",
     "nikic/php-parser": "^5.0",
     "zero-to-prod/filesystem": "^0.1.0",
     "zero-to-prod/docgen-visitor": "^1.0",
